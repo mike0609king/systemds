@@ -40,11 +40,11 @@ public class RewriteDetTest extends AutomatedTestBase
 	private static final String TEST_NAME_SCALAR_MATRIX_MULT = "RewriteDetScalarMatrixMult";
 
 	private static final String TEST_DIR = "functions/rewrite/";
-	private static final String TEST_CLASS_DIR = TEST_DIR + RewriteFoldMinMaxTest.class.getSimpleName() + "/";
+	private static final String TEST_CLASS_DIR = TEST_DIR + RewriteDetTest.class.getSimpleName() + "/";
 
-	private final static int rows = 12;
-	private final static double _sparsityDense = 0.5;
-	private final static double _sparsitySparse = 0.05;
+	private final static int rows = 15;
+	private final static double _sparsityDense = 0.7;
+	private final static double _sparsitySparse = 0.3;
 	private final static double eps = 1e-8;
 	
 	@Override
