@@ -26,7 +26,9 @@ options(digits=22)
 
 library("Matrix")
 
-A <- readMM(paste(args[1], "A.mtx", sep=""))
-B <- readMM(paste(args[1], "B.mtx", sep=""))
-d = t(det(t(t(A) %*% t(B))));
-write(d, paste(args[2], "d", sep="")); 
+A <- readMM(paste(args[1], "A.mtx", sep=""));
+B <- readMM(paste(args[1], "B.mtx", sep=""));
+tmp_lambda <- readMM(paste(args[1], "lambda.mtx", sep=""));
+lambda <- as.double(tmp_lambda[1, 1]);
+d = det(lambda*t(t(A) %*% t(B)));
+write(d, paste(args[2], "d", sep=""));
