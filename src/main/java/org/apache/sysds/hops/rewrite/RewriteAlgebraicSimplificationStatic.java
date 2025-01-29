@@ -167,6 +167,7 @@ public class RewriteAlgebraicSimplificationStatic extends HopRewriteRule
 			hi = pushdownUnaryAggTransposeOperation(hop, hi, i); //e.g., colSums(t(X)) -> t(rowSums(X))
 			hi = pushdownCSETransposeScalarOperation(hop, hi, i);//e.g., a=t(X), b=t(X^2) -> a=t(X), b=t(X)^2 for CSE t(X)
 			hi = pushdownDetMultOperation(hop, hi, i);    		 //e.g., det(X%*%Y) -> det(X)*det(Y)
+			hi = pushdownDetScalarMatrixMultOperation(hop, hi, i);  //e.g., det(lambda*X) -> lambda^nrow*det(X)
 			hi = pushdownSumBinaryMult(hop, hi, i);              //e.g., sum(lambda*X) -> lambda*sum(X)
 			hi = pullupAbs(hop, hi, i);                          //e.g., abs(X)*abs(Y) --> abs(X*Y)
 			hi = simplifyUnaryPPredOperation(hop, hi, i);        //e.g., abs(ppred()) -> ppred(), others: round, ceil, floor
@@ -1213,6 +1214,38 @@ public class RewriteAlgebraicSimplificationStatic extends HopRewriteRule
 
 			LOG.debug("Applied pushdownDetMultOperation.");
 			return bop;
+		}
+		return hi;
+	}
+
+	/**
+	 * det(lambda*X) -> lambda^nrow*det(X)
+	 *
+	 * @param parent parent high-level operator
+	 * @param hi high-level operator
+	 * @param pos position
+	 * @return high-level operator
+	 */
+	private static Hop pushdownDetScalarMatrixMultOperation(Hop parent, Hop hi, int pos) {
+		if( HopRewriteUtils.isUnary(hi, OpOp1.DET)
+				&& HopRewriteUtils.isBinary(hi.getInput(0), OpOp2.MULT)
+				&& ((hi.getInput(0).getInput(0).isMatrix() && hi.getInput(0).getInput(1).isScalar())
+					|| (hi.getInput(0).getInput(0).isScalar() && hi.getInput(0).getInput(1).isMatrix())))
+		{
+			Hop operand1 = hi.getInput(0).getInput(0);
+			Hop operand2 = hi.getInput(0).getInput(1);
+
+			Hop lambda = (operand1.isScalar()) ? operand1 : operand2;
+			Hop matrix = (operand1.isMatrix()) ? operand1 : operand2;
+
+			Hop uopDet = HopRewriteUtils.createUnary(matrix, OpOp1.DET);
+			Hop uopNrow = HopRewriteUtils.createUnary(matrix, OpOp1.NROW);
+			Hop bopPow = HopRewriteUtils.createBinary(lambda, uopNrow, OpOp2.POW);
+			Hop bopMult = HopRewriteUtils.createBinary(bopPow, uopDet, OpOp2.MULT);
+			HopRewriteUtils.replaceChildReference(parent, hi, bopMult, pos);
+
+			LOG.debug("Applied pushdownDetScalarMatrixMultOperation.");
+			return bopMult;
 		}
 		return hi;
 	}
