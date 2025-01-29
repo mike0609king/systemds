@@ -21,8 +21,13 @@
 
 # junit test class: org.apache.sysds.test.functions.rewrite.RewriteDetTest.java
 
-A = read($1);
-B = read($2);
-lambda = as.scalar(read($3));
-d = det(lambda*t(t(A)%*%t(B)));
-write(d, $4);
+args <- commandArgs(TRUE)
+options(digits=22)
+
+library("Matrix")
+
+A <- readMM(paste(args[1], "A.mtx", sep=""));
+tmp_lambda <- readMM(paste(args[1], "lambda.mtx", sep=""));
+lambda <- as.double(tmp_lambda[1, 1]);
+d = det(lambda*A);
+write(d, paste(args[2], "d", sep=""));
